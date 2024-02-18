@@ -85,7 +85,45 @@ class stupidAI(connect4Player):
 class minimaxAI(connect4Player):
 
 	def evaluation(self, env):
-		# I first make an array for the weights that I want to use
+			# Now lets try to do a function based on the sequences
+		def count_sequences(board, num):
+			count = 0
+			score = 0
+			for i in range(board.size):
+				if board[i] == num:
+					count += 1
+					if count == 2:
+						score += 1
+					elif count == 3:
+						score += 10
+					elif count >= 4:
+						score += 1000
+				else: 
+					count = 0
+			return score
+			
+		total_score = 0
+		board = deepcopy(env.board)
+		# Check Rows
+		for row in board:
+			total_score += count_sequences(row, self.position)  # Maximizing player
+			total_score -= count_sequences(row, self.opponent.position)  # Minimizing player
+		
+		for col in range(board.shape[1]):
+			total_score += count_sequences(board[:, col], self.position)
+			total_score -= count_sequences(board[:, col], self.opponent.position)
+
+		# Check diagonals
+		for diag in range(-board.shape[0] + 1, board.shape[1]):
+			# Upward diagonals
+			total_score += count_sequences(np.diag(board, k=diag), self.position)
+			total_score -= count_sequences(np.diag(board, k=diag), self.opponent.position)
+			# Downward diagonals (flip the board vertically to reuse the upward diagonal checking)
+			total_score += count_sequences(np.diag(np.fliplr(board), k=diag), self.position)
+			total_score -= count_sequences(np.diag(np.fliplr(board), k=diag), self.opponent.position)
+		#if total_score > 0:
+			#print(f"For this board {board}, the evaluation is {total_score}")
+		#I first make an array for the weights that I want to use
 		weights_array = np.array([[3,4,5,7,5,4,3],
 						   [4,6,8,10,8,6,4],
 						   [5,8,11,13,11,8,5],
@@ -93,15 +131,15 @@ class minimaxAI(connect4Player):
 						   [4,6,8,10,8,6,4],
 						   [3,4,5,7,5,4,3]])
 		# Turn all the board where it says 2 into -1
-		board = deepcopy(env.board)
-		board[board == 2] = -1
+		board[board == self.opponent.position] = -1
 		evaluation = np.sum(weights_array * board)
-		return evaluation
+		return  (0.25 * evaluation) * (0.75 * total_score)
+
+
 				
 
 	def play(self, env: connect4, move: list) -> None:
 		def minimax(env, depth, maximizing):
-			env = deepcopy(env)
 			env.visualize = False
 			possible = env.topPosition >= 0
 			indices = []
@@ -118,33 +156,34 @@ class minimaxAI(connect4Player):
 				#print(f"this is the board {env.board}")
 				env = deepcopy(env)
 				if maximizing:
-					env.board[env.topPosition[moves]][moves] = 1
+					env.board[env.topPosition[moves]][moves] = self.position
 					env.topPosition[moves] -= 1
 					#print("Right before the gameOver ", "Column = ", moves, "Top Position =", env.topPosition[moves])
-					if env.gameOver(moves, 1):
+					if env.gameOver(moves, self.position):
 						return math.inf
 					if depth == 0:
 						return self.evaluation(env)
 					v_temp = max(v, minimax(env, depth - 1, maximizing=False))
 					if v_temp > v:
+						print("This is the move chosen", moves, "/n")
 						move[:] = np.array([moves])
 						v = v_temp
 				else:
-					env.board[env.topPosition[moves]][moves] = 2
+					env.board[env.topPosition[moves]][moves] = self.opponent.position
 					env.topPosition[moves] -= 1
-					if env.gameOver(moves, 2):
+					if env.gameOver(moves, self.opponent.position):
 						return -math.inf
 					if depth == 0:
 						return self.evaluation(env)
 					v_temp = min(v, minimax(env, depth - 1, maximizing=True))
 					if v_temp < v :
-						move[:] = np.array([moves])
+						#move[:] = np.array([moves])
 						v = v_temp
 			return v
 					
 		# Start with depth = 1
 		depth = 1
-		while depth < 7:
+		while depth <= 5:
 			# Run the minimax with depth 1
 			minimax(env, depth, maximizing = True)
 			# Keep increasing the depth until time runs out

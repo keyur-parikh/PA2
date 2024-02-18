@@ -19,8 +19,8 @@ class monteCarloAI(connect4Player):
 			if p: indices.append(i)
 		#print("This is the indices -MC", indices)
 		#print("This is the possible -MC", possible)
-		for moves in indices:
-			print("This is the environment -MC", env.topPosition[moves])
+		#for moves in indices:
+			#print("This is the environment -MC", env.topPosition[moves])
 		# Init fitness trackers
 		vs = np.zeros(7)
 		# Play until told to stop
@@ -45,9 +45,9 @@ class monteCarloAI(connect4Player):
 		move = first_move
 		player = self.position
 		self.simulateMove(env, move, player)
-		if boolean:
-			print("This is the Monte Carlo Move", move, player)
-			print("And this is the index that would go into the function", env.topPosition[move])
+		#if boolean:
+			#print("This is the Monte Carlo Move", move, player)
+			#print("And this is the index that would go into the function", env.topPosition[move])
 		while not env.gameOver(move, player,):
 			player = switch[player]
 			possible = env.topPosition >= 0
