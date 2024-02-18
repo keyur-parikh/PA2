@@ -124,72 +124,79 @@ class minimaxAI(connect4Player):
 		#if total_score > 0:
 			#print(f"For this board {board}, the evaluation is {total_score}")
 		#I first make an array for the weights that I want to use
-		weights_array = np.array([[3,4,5,7,5,4,3],
-						   [4,6,8,10,8,6,4],
-						   [5,8,11,13,11,8,5],
-						   [5,8,11,13,11,8,5],
-						   [4,6,8,10,8,6,4],
-						   [3,4,5,7,5,4,3]])
+		#weights_array = np.array([[3,4,5,7,5,4,3],
+						   #[4,6,8,10,8,6,4],
+						   #[5,8,11,13,11,8,5],
+						   #[5,8,11,13,11,8,5],
+						   #[4,6,8,10,8,6,4],
+						  # [3,4,5,7,5,4,3]])
 		# Turn all the board where it says 2 into -1
-		board[board == self.opponent.position] = -1
-		evaluation = np.sum(weights_array * board)
-		return  (0.25 * evaluation) * (0.75 * total_score)
-
+		#board[board == self.opponent.position] = -1
+		#evaluation = np.sum(weights_array * board)
+		return total_score
 
 				
 
 	def play(self, env: connect4, move: list) -> None:
-		def minimax(env, depth, maximizing):
-			env.visualize = False
+		self.minimax(move, env, 5, True)
+	def minimax(self, move: list, env: connect4, depth, if_maximizing):
+		# First, check if max player
+		if if_maximizing:
+			# Check if the opponent won the game with their last move, if they did then return -infinity
+			if len(env.history[self.opponent.position - 1]) != 0 and env.gameOver(env.history[self.opponent.position - 1][-1], self.opponent.position):
+				return -math.inf
+			# Now, if depth has been reached, we check for an evaluation
+			if depth == 0:
+				return self.evaluation(env)
+			# Now, we run the minimax where we go through each possible move
+			# First, create a list of all possible moves
 			possible = env.topPosition >= 0
 			indices = []
 			for i, p in enumerate(possible):
 				if p: indices.append(i)
-			#print("This is the indices -MM", indices)
-			if maximizing:
-				v = -math.inf
-			else:
-				v = math.inf
-			for moves in indices:
-				#print(f"This loop has gone {moves} times")
-				#print(f"This is the environment {env.topPosition[moves]}")
-				#print(f"this is the board {env.board}")
+			v = -math.inf
+			# Now, iterate through each move
+			for column in indices:
+				# First we simulate each move
 				env = deepcopy(env)
-				if maximizing:
-					env.board[env.topPosition[moves]][moves] = self.position
-					env.topPosition[moves] -= 1
-					#print("Right before the gameOver ", "Column = ", moves, "Top Position =", env.topPosition[moves])
-					if env.gameOver(moves, self.position):
-						return math.inf
-					if depth == 0:
-						return self.evaluation(env)
-					v_temp = max(v, minimax(env, depth - 1, maximizing=False))
-					if v_temp > v:
-						print("This is the move chosen", moves, "/n")
-						move[:] = np.array([moves])
-						v = v_temp
-				else:
-					env.board[env.topPosition[moves]][moves] = self.opponent.position
-					env.topPosition[moves] -= 1
-					if env.gameOver(moves, self.opponent.position):
-						return -math.inf
-					if depth == 0:
-						return self.evaluation(env)
-					v_temp = min(v, minimax(env, depth - 1, maximizing=True))
-					if v_temp < v :
-						#move[:] = np.array([moves])
-						v = v_temp
-			return v
-					
-		# Start with depth = 1
-		depth = 1
-		while depth <= 5:
-			# Run the minimax with depth 1
-			minimax(env, depth, maximizing = True)
-			# Keep increasing the depth until time runs out
-			depth += 1
+				self.simulateMove(env, column, self.position)
+				v_temp = max(v, self.minimax(move, env, depth - 1, False))
+				if v_temp > v:
+					move[:] = [column]
+					v = v_temp
+		else:
+			# Check if the opponent won the game with their last move, if they did then return -infinity
+			if len(env.history[self.position -1 ]) != 0 and env.gameOver(env.history[self.position - 1][-1], self.position):
+				return math.inf
+			# Now, if depth has been reached, we check for an evaluation
+			if depth == 0:
+				return self.evaluation(env)
+			# Now, we run the minimax where we go through each possible move
+			# First, create a list of all possible moves
+			possible = env.topPosition >= 0
+			indices = []
+			for i, p in enumerate(possible):
+				if p: indices.append(i)
+			v = math.inf
+			# Now, iterate through each move
+			for column in indices:
+				# First we simulate each move
+				env = deepcopy(env)
+				self.simulateMove(env, column, self.position)
+				# Then take the min of the current v and the recursive call to max
+				v = min(v, self.minimax(move, env, depth - 1, True))
+				# If change in V, then make the v
+
+		return v
+
+			
+		
 
 
+	def simulateMove(self, env: connect4, move: int, player: int):
+		env.board[env.topPosition[move]][move] = player
+		env.topPosition[move] -= 1
+		env.history[player-1].append(move)
 
 				
 
