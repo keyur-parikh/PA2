@@ -10,7 +10,7 @@ parser.add_argument('-p1', default='human', type=str, help='Player 1 agent. Use 
 parser.add_argument('-p2', default='human', type=str, help='Player 2 agent. Use any of the following: [human, humanTxt, stupidAI, randomAI, monteCarloAI, minimaxAI, alphaBetaAI]')
 parser.add_argument('-seed', default=0, type=int, help='Seed for random algorithms')
 parser.add_argument('-visualize', default='True', type=str, help='Use GUI')
-parser.add_argument('-verbose', default='True', type=str, help='Print boards to shell')
+parser.add_argument('-verbose', default='False', type=str, help='Print boards to shell')
 parser.add_argument('-limit_players', default='1,2', type=str, help='Players to limit time for. List players as numbers eg [1,2]')
 parser.add_argument('-time_limit', default='0.5,0.5', type=str, help='Time limits for each player. Must be list of 2 elements > 0. Not used if player is not listed')
 parser.add_argument('-cvd_mode', default='False', type=str, help='Uses colorblind-friendly palette')
